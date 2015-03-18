@@ -7,15 +7,18 @@ var adbClient = adb.createClient();
 
 portfinder.basePort = 9222;
 
-function getTargets() {
+function discoverDevices() {
 
 	return adbClient.listDevices()
 		.then(function(devices) {
 			console.log('devices', devices);
-			return Promise.all(devices.map(findServices));
+
+			return Promise.reduce(Promise.all(devices.map(findServices)), function(a, b) {
+				a.concat(b);
+			});
 		})
-		.spread(function(services) {		
-			console.log('services:', services);
+		.then(function(services) {	
+			console.log('services:', services);	
 			return Promise.all(services.map(setupForward));
 		})
 		.then(function(forwarded) {
@@ -59,9 +62,7 @@ function setupForward(info) {
 			.then(function() {
 				return {
 					device: info.device,
-					port: port,
-					local: localAddress,
-					remote: remoteAddress
+					url: 'http://localhost:' + port,
 				};
 			});
 	}));
@@ -80,4 +81,4 @@ function getPort() {
 	});
 }
 
-module.export = getTargets;
+module.export = discoverDevices;
