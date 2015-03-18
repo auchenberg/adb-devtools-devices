@@ -11,12 +11,12 @@ function getTargets() {
 
 	return adbClient.listDevices()
 		.then(function(devices) {
-			console.log('found', devices.length, 'devices');
+			console.log('devices', devices);
 			return Promise.all(devices.map(findServices));
 		})
-		.then(function(services) {		
+		.spread(function(services) {		
 			console.log('services:', services);
-			return Promise.all(services.map(setupDeviceForward));
+			return Promise.all(services.map(setupForward));
 		})
 		.then(function(forwarded) {
 			console.log('forwarded', forwarded);
@@ -39,33 +39,33 @@ function findServices(device) {
 				}
 			};
 
-			return {
-				device: device.id,
-				services: services
-			};
+			return Promise.map(services, function(service) {
+				return {
+					device: device,
+					service: service
+				};
+			});
+
 		});
 }
 
-function setupDeviceForward(serviceInfo) {
+function setupForward(info) {
 
-	return Promise.map(serviceInfo.services, function(service) {
+	return (getPort().then(function(port) {
+		var localAddress = 'tcp:' + port;
+		var remoteAddress = 'localabstract:' + info.service.replace('@', '');
+		return adbClient
+			.forward(info.device.id, localAddress, remoteAddress)
+			.then(function() {
+				return {
+					device: info.device,
+					port: port,
+					local: localAddress,
+					remote: remoteAddress
+				};
+			});
+	}));
 
-		return (getPort().then(function(port) {
-			var localAddress = 'tcp:' + port;
-			var remoteAddress = 'localabstract:' + service.replace('@', '');
-			return adbClient
-				.forward(serviceInfo.device, localAddress, remoteAddress)
-				.then(function() {
-					return {
-						id: serviceInfo.device,
-						port: port,
-						local: localAddress,
-						remote: remoteAddress
-					};
-				});
-		}));
-
-	});
 }
 
 function getPort() {
