@@ -80,4 +80,4 @@ function getPort() {
 	});
 }
 
-getTargets();
+module.export = getTargets;
