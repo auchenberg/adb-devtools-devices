@@ -1,6 +1,6 @@
 {
   "name": "adb-devtools-devices",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Detect and connect to DevTools services on devices using ADB",
   "main": "index.js",
   "scripts": {
