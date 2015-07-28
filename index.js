@@ -81,4 +81,4 @@ function getPort() {
     });
 }
 
-module.export = discoverDevices;
+module.exports = discoverDevices;
